@@ -57,7 +57,7 @@ html {
 /* Sidebar brand/title (e.g., "CouponApp") */
 .sidebar-brand {
   font-weight: 700; /* Bold text */
-  color: #096a97; /* Accent blue color */
+  color: #E53935; /* Accent red color (was blue) */
   margin-bottom: 18px; /* Space below brand */
   font-size: 20px; /* Brand text size */
 }
@@ -80,8 +80,8 @@ html {
 
 /* Active/selected navigation item */
 .nav-item.active {
-  background: rgba(7, 128, 185, 0.08); /* Light blue background (8% opacity) */
-  color: #0780b9; /* Accent blue text */
+  background: rgba(229,57,53,0.08); /* Light red background (8% opacity) */
+  color: #E53935; /* Accent red text */
 }
 
 /* ===== MAIN CONTENT AREA ===== */
@@ -106,7 +106,7 @@ html {
 .title {
   margin: 0; /* Remove default margins */
   font-size: 28px; /* Large title text */
-  color: #0780b9; /* Accent blue color */
+  color: #E53935; /* Accent red color (was blue) */
 }
 
 /* Header metadata (e.g., timestamp, subtitle) */
@@ -137,7 +137,7 @@ html {
 .stat-value {
   font-size: 34px; /* Large, prominent number */
   font-weight: 700; /* Bold text */
-  color: #0780b9; /* Accent blue color */
+  color: #E53935; /* Accent red color (was blue) */
 }
 
 /* Label text below stat value (e.g., "Active Coupons") */
@@ -169,7 +169,7 @@ html {
 /* Table card title (e.g., "Recent Coupons") */
 .table-card-header h2 {
   margin: 0; /* Remove default margins */
-  color: #0780b9; /* Accent blue color */
+  color: #E53935; /* Accent red color (was blue) */
   font-size: 20px; /* Medium title size */
 }
 
@@ -208,9 +208,9 @@ html {
 
 /* Filled button style (default, non-ghost buttons) */
 .btn:not(.ghost) {
-  background: #06b6d4; /* Teal/cyan background */
+  background: #E53935; /* Red background (was teal/cyan) */
   color: #fff; /* White text */
-  box-shadow: 0 6px 14px rgba(6, 182, 212, 0.14); /* Teal shadow */
+  box-shadow: 0 6px 14px rgba(229,57,53,0.14); /* Red shadow */
 }
 
 /* ===== COUPONS TABLE ===== */
@@ -254,10 +254,10 @@ html {
   font-weight: 600; /* Semi-bold text */
 }
 
-/* Active status pill - blue */
+/* Active status pill - red (was blue) */
 .pill-active {
-  background: rgba(7, 128, 185, 0.08); /* Light blue background (8% opacity) */
-  color: #0780b9; /* Blue text */
+  background: rgba(229,57,53,0.08); /* Light red background (8% opacity) */
+  color: #E53935; /* Red text */
 }
 
 /* Redeemed status pill - green */
@@ -498,8 +498,8 @@ html {
 /* hover/focus state for close */
 .flash-close:hover,
 .flash-close:focus {
-  background: rgba(6, 182, 212, 0.08);
-  color: #0780b9;
+  background: rgba(229,57,53,0.08);
+  color: #E53935;
   outline: none;
 }
 
@@ -625,7 +625,7 @@ html {
 /* Left column (inputs) */
 .redeem-card-left { flex: 1 1 560px; min-width: 240px; }
 
-.label-large { font-size: 18px; font-weight:700; color:#096a97; display:block; margin-bottom:8px; }
+.label-large { font-size: 18px; font-weight:700; color:#E53935; display:block; margin-bottom:8px; }
 
 .input-row { display:flex; gap:12px; align-items:center; }
 .input-row .form-input { flex:1 1 auto; min-width:200px; }
@@ -634,7 +634,7 @@ html {
 /* right column (preview) */
 .redeem-card-right { width: 260px; min-width:180px; }
 .preview-mini { background:#fbfcfe; border-radius:8px; padding:12px; border:1px solid #eef3f6; }
-.preview-title { font-weight:700; color:#0780b9; margin-bottom:8px; }
+.preview-title { font-weight:700; color:#E53935; margin-bottom:8px; }
 .preview-body { font-size:14px; color:#4b4f55; }
 .preview-field { margin-bottom:8px; }
 
@@ -700,9 +700,9 @@ html {
   color: #8B1D1D;
 }
 .server-msg--info {
-  background: #E9F4FF;
-  border-color: #BFDFFF;
-  color: #055C92;
+  background: #FFEBEE;
+  border-color: #FFD6D6;
+  color: #C62828;
 }
 .server-msg--warning {
   background: #FFF7E6;
@@ -755,9 +755,9 @@ html {
   color: #8B1D1D !important;
 }
 #server-msg-area .server-msg--info {
-  background: #E9F4FF !important;
-  border-color: #BFDFFF !important;
-  color: #055C92 !important;
+  background: #FFEBEE !important;
+  border-color: #FFD6D6 !important;
+  color: #C62828 !important;
 }
 #server-msg-area .server-msg--warning {
   background: #FFF7E6 !important;

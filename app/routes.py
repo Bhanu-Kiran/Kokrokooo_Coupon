@@ -80,54 +80,70 @@ def _ensure_instance_dir():
 
 
 # --------------------
-# Dashboard / other pages (preserve existing UX)
+# Dashboard helpers (live DB-backed)
 # --------------------
-def sample_stats_and_coupons():
-    # dummy data for UI development; later will be DB-driven
+def _dashboard_stats_and_recent(limit=10):
+    """
+    Returns (stats, coupons_list) where:
+      - stats: {"active": int, "redeemed_today": int, "expiring_24h": int}
+      - coupons_list: list of dicts with keys code, description, valid_from, valid_to, status
+    """
     now = datetime.now()
-    stats = {"active": 42, "redeemed_today": 8, "expiring_24h": 5}
-    coupons = [
-        {
-            "code": "WELCOME10",
-            "description": "10% off first order",
-            "issued_at": "2025-11-30 10:00",
-            "valid_to": "2026-01-01 10:00",
-            "status": "Active",
-        },
-        {
-            "code": "LUNCH50",
-            "description": "₹50 off > ₹300",
-            "issued_at": "2025-12-03 12:00",
-            "valid_to": "2025-12-05 12:00",
-            "status": "Redeemed",
-        },
-        {
-            "code": "FUTURE5",
-            "description": "5% off",
-            "issued_at": "2025-12-10 09:00",
-            "valid_to": "2025-12-20 09:00",
-            "status": "Upcoming",
-        },
-        {
-            "code": "EXPIRED1",
-            "description": "20% off",
-            "issued_at": "2025-10-01 08:00",
-            "valid_to": "2025-10-10 08:00",
-            "status": "Expired",
-        },
-    ]
+    # Active coupons: not expired, not upcoming, not fully redeemed
+    active_count = Coupon.query.filter(
+        (Coupon.valid_from == None) | (Coupon.valid_from <= now),
+        (Coupon.valid_to == None) | (Coupon.valid_to >= now),
+        (Coupon.redeemed_count < (Coupon.max_redemptions))
+    ).count()
+
+    # Redeemed today: simple audit log filter where timestamp date == today
+    start_of_day = datetime(now.year, now.month, now.day, 0, 0, 0)
+    end_of_day = datetime(now.year, now.month, now.day, 23, 59, 59)
+    redeemed_today = AuditLog.query.filter(
+        AuditLog.action == "redeem",
+        AuditLog.timestamp >= start_of_day,
+        AuditLog.timestamp <= end_of_day
+    ).count()
+
+    # Expiring within next 24 hours (valid_to present and between now and now+24h)
+    window_end = now + timedelta(hours=24)
+    expiring_24h = Coupon.query.filter(
+        Coupon.valid_to != None,
+        Coupon.valid_to >= now,
+        Coupon.valid_to <= window_end
+    ).count()
+
+    # Recent coupons: latest N by id (or issued_at if you prefer)
+    rows = Coupon.query.order_by(Coupon.id.desc()).limit(limit).all()
+    coupons = []
+    for c in rows:
+        coupons.append({
+            "code": c.code,
+            "description": c.description or "",
+            "valid_from": c.valid_from.isoformat(sep=" ", timespec="minutes") if getattr(c, "valid_from", None) else "",
+            "valid_to": c.valid_to.isoformat(sep=" ", timespec="minutes") if getattr(c, "valid_to", None) else "",
+            "status": _status_for_coupon(c, now)
+        })
+
+    stats = {
+        "active": active_count,
+        "redeemed_today": redeemed_today,
+        "expiring_24h": expiring_24h
+    }
     return stats, coupons
 
 
 @bp.route("/")
 def index():
-    stats, coupons = sample_stats_and_coupons()
+    # Live dashboard values
+    stats, coupons = _dashboard_stats_and_recent(limit=10)
     return render_template(
         "dashboard.html",
         stats=stats,
         coupons=coupons,
         generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
+
 
 
 @bp.route("/register", methods=["GET", "POST"])
