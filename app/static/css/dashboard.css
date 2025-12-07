@@ -1,0 +1,772 @@
+/* ============================================================================
+   Dashboard CSS - Material Design Inspired Style (B1 Centered Container)
+   ============================================================================ */
+
+/* ===== GLOBAL BODY STYLES ===== */
+/* Sets the base styling for the entire page */
+body {
+  margin: 0; /* Remove default browser margins */
+  /* Use system fonts for native look across different operating systems */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
+  background: #f6f7f9; /* Light grey background color */
+  color: #28282d; /* Dark grey text color for good contrast */
+  /* Smooth font rendering on Mac/iOS browsers */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ==========================================================
+   GLOBAL UI SCALE — adjust entire UI size (fonts, spacing, cards)
+   Change this value to scale everything proportionally.
+   1.0 = normal, 1.5 = 150% zoom, 1.25 = 125% zoom
+   ========================================================== */
+
+:root {
+  --ui-scale: 1.3;  /* <--- change this value to scale the whole UI */
+}
+
+html {
+  transform: scale(var(--ui-scale));
+  transform-origin: top left;
+  width: calc(100% / var(--ui-scale));
+  height: calc(100% / var(--ui-scale));
+}
+
+
+
+/* ===== MAIN LAYOUT CONTAINER ===== */
+/* Flexbox container that holds sidebar and main content area */
+.app-container {
+  display: flex; /* Use flexbox for layout */
+  min-height: 100vh; /* Ensure container takes full viewport height */
+  align-items: flex-start; /* Align items to the top */
+}
+
+/* ===== SIDEBAR STYLES ===== */
+/* Left navigation sidebar - fixed width */
+.sidebar {
+  width: 220px; /* Fixed sidebar width */
+  background: #fff; /* White background */
+  border-right: 1px solid #d7dae1; /* Light grey right border */
+  padding: 18px; /* Internal spacing */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Sidebar brand/title (e.g., "CouponApp") */
+.sidebar-brand {
+  font-weight: 700; /* Bold text */
+  color: #096a97; /* Accent blue color */
+  margin-bottom: 18px; /* Space below brand */
+  font-size: 20px; /* Brand text size */
+}
+
+/* Navigation menu container */
+.side-nav {
+  display: flex; /* Flexbox for vertical menu */
+  flex-direction: column; /* Stack menu items vertically */
+  gap: 8px; /* Space between menu items */
+}
+
+/* Individual navigation menu item */
+.nav-item {
+  color: #272829; /* Dark grey text */
+  text-decoration: none; /* Remove underline from links */
+  padding: 8px 10px; /* Internal padding for clickable area */
+  border-radius: 8px; /* Rounded corners */
+  font-size: 15px; /* Menu item text size */
+}
+
+/* Active/selected navigation item */
+.nav-item.active {
+  background: rgba(7, 128, 185, 0.08); /* Light blue background (8% opacity) */
+  color: #0780b9; /* Accent blue text */
+}
+
+/* ===== MAIN CONTENT AREA ===== */
+/* Main content section (right side, next to sidebar) */
+.main {
+  max-width: 1200px; /* Maximum width for centered layout */
+  width: calc(100% - 220px); /* Full width minus sidebar width */
+  margin: 28px 40px; /* Top/bottom and left/right margins */
+  box-sizing: border-box; /* Include padding in width calculation */
+  flex: 1; /* Take remaining space in flex container */
+}
+
+/* Header section at top of main content */
+.main-header {
+  display: flex; /* Flexbox for horizontal layout */
+  justify-content: space-between; /* Space between title and metadata */
+  align-items: baseline; /* Align items on text baseline */
+  gap: 12px; /* Space between header elements */
+}
+
+/* Page title (e.g., "Dashboard") */
+.title {
+  margin: 0; /* Remove default margins */
+  font-size: 28px; /* Large title text */
+  color: #0780b9; /* Accent blue color */
+}
+
+/* Header metadata (e.g., timestamp, subtitle) */
+.header-meta {
+  color: #788087; /* Muted grey color */
+  font-size: 13px; /* Small text size */
+}
+
+/* ===== STATISTICS CARDS ===== */
+/* Container for stat cards row */
+.stats-row {
+  display: flex; /* Flexbox for horizontal layout */
+  gap: 28px; /* Space between stat cards */
+  margin-top: 18px; /* Space above stats row */
+}
+
+/* Individual statistics card */
+.stat-card {
+  background: #fff; /* White background */
+  border-radius: 12px; /* Rounded corners */
+  border: 1px solid #d7dae1; /* Light grey border */
+  padding: 18px 22px; /* Internal spacing */
+  width: 320px; /* Fixed card width */
+  box-shadow: 0 6px 18px rgba(12, 18, 25, 0.04); /* Subtle shadow for depth */
+}
+
+/* Large number value in stat card (e.g., "42") */
+.stat-value {
+  font-size: 34px; /* Large, prominent number */
+  font-weight: 700; /* Bold text */
+  color: #0780b9; /* Accent blue color */
+}
+
+/* Label text below stat value (e.g., "Active Coupons") */
+.stat-label {
+  font-size: 13px; /* Small text */
+  color: #8b8f95; /* Muted grey color */
+  margin-top: 6px; /* Space above label */
+}
+
+/* ===== TABLE CARD ===== */
+/* Container card for the coupons table */
+.table-card {
+  margin-top: 24px; /* Space above table card */
+  background: #fff; /* White background */
+  border-radius: 12px; /* Rounded corners */
+  border: 1px solid #d7dae1; /* Light grey border */
+  padding: 18px; /* Internal spacing */
+  box-shadow: 0 6px 18px rgba(12, 18, 25, 0.04); /* Subtle shadow */
+}
+
+/* Header section of table card */
+.table-card-header {
+  display: flex; /* Flexbox for horizontal layout */
+  justify-content: space-between; /* Space between title and actions */
+  align-items: center; /* Vertically center items */
+  margin-bottom: 12px; /* Space below header */
+}
+
+/* Table card title (e.g., "Recent Coupons") */
+.table-card-header h2 {
+  margin: 0; /* Remove default margins */
+  color: #0780b9; /* Accent blue color */
+  font-size: 20px; /* Medium title size */
+}
+
+/* Container for action buttons in table header */
+.table-actions {
+  display: flex; /* Flexbox for horizontal button layout */
+  gap: 10px; /* Space between buttons */
+  align-items: center; /* Vertically center buttons */
+}
+
+/* ===== BUTTON STYLES ===== */
+/* Base button style */
+.btn {
+  display: inline-block; /* Allow width/height control */
+  padding: 8px 14px; /* Internal spacing */
+  border-radius: 10px; /* Rounded corners */
+  font-weight: 600; /* Semi-bold text */
+  text-decoration: none; /* Remove underline */
+  border: none; /* No border by default */
+  cursor: pointer; /* Pointer cursor on hover */
+  font-size: 14px; /* Button text size */
+}
+
+/* Small button variant */
+.btn.small {
+  padding: 6px 12px; /* Smaller padding */
+  font-size: 13px; /* Smaller text */
+}
+
+/* Ghost/outlined button style (transparent background) */
+.btn.ghost {
+  background: transparent; /* No background */
+  border: 1px solid #d7dae1; /* Light grey border */
+  color: #2d2f33; /* Dark grey text */
+}
+
+/* Filled button style (default, non-ghost buttons) */
+.btn:not(.ghost) {
+  background: #06b6d4; /* Teal/cyan background */
+  color: #fff; /* White text */
+  box-shadow: 0 6px 14px rgba(6, 182, 212, 0.14); /* Teal shadow */
+}
+
+/* ===== COUPONS TABLE ===== */
+/* Main table for displaying coupons */
+.coupons-table {
+  width: 100%; /* Full width of container */
+  border-collapse: collapse; /* Merge adjacent borders */
+  margin-top: 8px; /* Space above table */
+  font-size: 14px; /* Table text size */
+}
+
+/* Table header row cells */
+.coupons-table thead th {
+  text-align: left; /* Left-align header text */
+  color: #8b8f95; /* Muted grey color */
+  padding: 8px 6px; /* Cell padding */
+  font-weight: 600; /* Semi-bold header text */
+  font-size: 13px; /* Slightly smaller header text */
+}
+
+/* Table body row cells */
+.coupons-table tbody td {
+  padding: 10px 6px; /* Cell padding */
+  border-top: 1px solid #f0f2f4; /* Light grey top border (row separator) */
+  vertical-align: middle; /* Vertically center cell content */
+}
+
+/* Action column (rightmost column with buttons) */
+.col-action {
+  text-align: right; /* Right-align action buttons */
+  width: 150px; /* Fixed width for action column */
+}
+
+/* ===== STATUS PILLS/BADGES ===== */
+/* Base style for status indicator pills */
+.pill {
+  display: inline-block; /* Allow width/height control */
+  padding: 6px 10px; /* Internal spacing */
+  border-radius: 999px; /* Fully rounded (pill shape) */
+  font-size: 12px; /* Small text */
+  font-weight: 600; /* Semi-bold text */
+}
+
+/* Active status pill - blue */
+.pill-active {
+  background: rgba(7, 128, 185, 0.08); /* Light blue background (8% opacity) */
+  color: #0780b9; /* Blue text */
+}
+
+/* Redeemed status pill - green */
+.pill-redeemed {
+  background: rgba(34, 139, 34, 0.08); /* Light green background (8% opacity) */
+  color: #228b22; /* Green text */
+}
+
+/* Upcoming status pill - orange */
+.pill-upcoming {
+  background: rgba(240, 180, 20, 0.08); /* Light orange background (8% opacity) */
+  color: #b86d00; /* Orange text */
+}
+
+/* Expired status pill - red */
+.pill-expired {
+  background: rgba(200, 40, 40, 0.06); /* Light red background (6% opacity) */
+  color: #c62828; /* Red text */
+}
+
+/* ===== PAGE FOOTER ===== */
+/* Footer section at bottom of page */
+.page-footer {
+  margin-top: 18px; /* Space above footer */
+  color: #8b8f95; /* Muted grey text */
+  font-size: 13px; /* Small text */
+  display: flex; /* Flexbox for horizontal layout */
+  justify-content: space-between; /* Space between footer elements */
+}
+
+/* ===== FLASH MESSAGES/NOTIFICATIONS ===== */
+/* Container for flash notification messages */
+.flash-list {
+  list-style: none; /* Remove bullet points */
+  padding: 0; /* No padding */
+  margin: 0; /* No margin */
+  position: fixed; /* Fixed position on screen */
+  right: 16px; /* 16px from right edge */
+  top: 80px; /* 80px from top */
+  z-index: 999; /* High z-index to appear above other content */
+}
+
+/* Individual flash message/notification */
+.flash {
+  background: #fff; /* White background */
+  padding: 8px 12px; /* Internal spacing */
+  border-radius: 8px; /* Rounded corners */
+  border: 1px solid #d7dae1; /* Light grey border */
+  margin-bottom: 8px; /* Space between multiple flash messages */
+  box-shadow: 0 6px 18px rgba(12, 18, 25, 0.04); /* Subtle shadow */
+}
+
+/* =========================
+   Form Grid: fixed ranges
+   - Left column (main inputs) : flexible but bounded
+   - Two small columns (validity/value) : fixed width
+   - Preview sits to the right (unchanged)
+   ========================= */
+
+/* Form grid wrapper (applies to the left-side form area) */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 140px 140px; /* main | validity value | validity unit */
+  grid-column-gap: 12px;
+  align-items: start;
+  row-gap: 12px;
+}
+
+/* Make single-line controls occupy whole grid width */
+.form-grid .full {
+  grid-column: 1 / 4; /* span all 3 columns */
+}
+
+/* Make control occupy first column only */
+.form-grid .col-main {
+  grid-column: 1 / 2;
+}
+
+/* Fixed small columns (value and unit) */
+.form-grid .col-small-1 { grid-column: 2 / 3; } /* validity value */
+.form-grid .col-small-2 { grid-column: 3 / 4; } /* validity unit */
+
+/* Keep labels above controls for consistent height */
+.form-grid label { display:block; margin-bottom:6px; font-size:13px; }
+
+/* Inputs full width of their cell */
+.form-grid .form-input,
+.form-grid select {
+  width: 100%;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #c4b0b0;
+  background:#fff;
+}
+
+/* Small screens: switch to stacked layout */
+@media (max-width: 880px) {
+  .form-grid {
+    grid-template-columns: 1fr; /* single column stack */
+  }
+  .form-grid .full,
+  .form-grid .col-main,
+  .form-grid .col-small-1,
+  .form-grid .col-small-2 { grid-column: 1 / 2; }
+}
+/* =========================
+   Responsive: robust form grid for high zoom levels
+   ========================= */
+
+/* Make the left form area use a responsive grid that can shrink/expand safely.
+   - main column: min 220px up to 1fr
+   - small cols: min 100px up to 140px (so they don't force wrap immediately)
+*/
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(100px, 140px) minmax(100px, 140px);
+  grid-column-gap: 10px;
+  align-items: start;
+  row-gap: 10px;
+}
+
+/* Full width helper, same as before */
+.form-grid .full { grid-column: 1 / 4; }
+.form-grid .col-main { grid-column: 1 / 2; }
+.form-grid .col-small-1 { grid-column: 2 / 3; }
+.form-grid .col-small-2 { grid-column: 3 / 4; }
+
+/* Inputs: keep fixed comfortable height, but allow shrinking on very small widths */
+.form-grid .form-input,
+.form-grid select {
+  width: 100%;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #9b9595;
+  background: #fff;
+  min-width: 0; /* allow inputs to shrink inside grid cells */
+}
+
+/* Make the parent table-card behave responsively: allow preview and form to stack earlier */
+.table-card {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap; /* allows preview to move below when needed */
+  /* existing visual rules kept (background, border, padding, etc) */
+}
+
+/* Left form container: allow it to take remaining space but set a min-width */
+.table-card > div:first-child {
+  flex: 1 1 520px;    /* grow, shrink, base 520px */
+  min-width: 280px;   /* at extreme zoom don't let it go smaller than this */
+}
+
+/* Preview card: allow it to shrink to a sensible width, then stack below (via media query) */
+.table-card > div:nth-child(2) {
+  flex: 0 0 360px;    /* prefer to be 360px, but will shrink if necessary */
+  min-width: 220px;   /* smallest comfortable preview width */
+}
+
+/* Buttons row: wrap buttons instead of overflowing */
+.form-grid .full > .btn,
+.form-grid .full > .btn.ghost,
+.form-grid .full > a.btn {
+  flex-wrap: wrap;
+}
+
+/* Breakpoints: when the container is narrower than these pixel widths, stack preview below form */
+@media (max-width: 1200px) {
+  /* reduce small column max to give main column more room */
+  .form-grid {
+    grid-template-columns: minmax(200px, 1fr) minmax(90px, 120px) minmax(90px, 120px);
+  }
+  .table-card { gap: 14px; }
+  .table-card > div:nth-child(2) { flex-basis: 320px; }
+}
+
+@media (max-width: 980px) {
+  /* stack form grid to a single column for small screens (and high zoom) */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid .full,
+  .form-grid .col-main,
+  .form-grid .col-small-1,
+  .form-grid .col-small-2 { grid-column: 1 / 2; }
+
+  /* preview takes full width under the form */
+  .table-card > div:first-child { flex-basis: 100%; }
+  .table-card > div:nth-child(2) { flex-basis: 100%; }
+}
+
+/* Extra small screens—tighten paddings */
+@media (max-width: 560px) {
+  .form-grid .form-input { height: 38px; padding: 6px 8px; }
+  .stat-card { padding: 14px; }
+}
+/* --------------------------
+   Flash message close button + small visual polish
+   -------------------------- */
+
+.flash {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #776868;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(12,18,25,0.04);
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+/* the message text container */
+.flash .flash-content {
+  font-size: 14px;
+  color: #2d2f33;
+}
+
+/* close button style */
+.flash-close {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: #6b6f74;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  margin-left: auto; /* push it to the far right */
+  border-radius: 6px;
+}
+
+/* hover/focus state for close */
+.flash-close:hover,
+.flash-close:focus {
+  background: rgba(6, 182, 212, 0.08);
+  color: #0780b9;
+  outline: none;
+}
+
+/* different flash categories (you may already have classes) */
+.flash-success { border-color: rgba(6,182,212,0.25); }
+.flash-error   { border-color: rgba(198,57,57,0.18); }
+.flash-info    { border-color: rgba(120,128,135,0.12); }
+
+/* ensure the flash-list stacking doesn't overflow awkwardly */
+.flash-list {
+  position: fixed;
+  right: 16px;
+  top: 80px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 420px;
+}
+
+/* server message area under preview */
+#server-msg-area { margin-top: 10px; font-size: 13px; }
+#server-msg-area div { padding: 6px 8px; border-radius: 6px; background: #fff5f5; border: 1px solid #f5c6cb; color: #8b1d1d; }
+/* ==========================================================================
+   Fixed left sidebar & consistent main content layout
+   - Makes sidebar a fixed left rail, full viewport height
+   - Keeps sidebar scrollable if items overflow
+   - Ensures main content respects the sidebar width and aligns consistently
+   ========================================================================= */
+
+/* Sidebar width used across rules (change here if you want different width) */
+:root {
+  --sidebar-w: 220px;    /* change to 240px if you prefer slightly wider */
+  --page-gutter: 40px;   /* horizontal gutter for main content */
+}
+
+/* Make sidebar fixed and full height */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--sidebar-w);
+  height: 100vh;            /* ensure it spans the viewport */
+  padding: 20px 18px;       /* keep previous padding */
+  overflow-y: auto;         /* allow scrolling if menu grows */
+  z-index: 800;             /* sits above page content but below modal UI */
+  background: #fff;         /* ensure consistent background */
+  box-shadow: 2px 0 8px rgba(12,18,25,0.02);
+}
+
+/* Prevent the sidebar contents from shrinking or reflowing across pages */
+.sidebar .side-nav { overflow: visible; }
+
+/* Make sure the brand sits nicely (if you changed top padding above tweak this) */
+.sidebar-brand { margin-top: 2px; }
+
+/* Main area: reserve space for the fixed sidebar */
+.main {
+  /* Remove the calc(width - sidebar) pattern and instead use margin-left */
+  margin-left: calc(var(--sidebar-w) + var(--page-gutter));
+  /* Keep the same right margin/padding you already used */
+  margin-right: var(--page-gutter);
+  padding-top: 28px;
+  box-sizing: border-box;
+  max-width: calc(100% - (var(--sidebar-w) + 2 * var(--page-gutter)));
+}
+
+/* Ensure the overall container doesn't reposition or vertically center the sidebar */
+.app-container {
+  align-items: flex-start; /* keep top-aligned */
+}
+
+/* Table card / small page cards: consistently centered in main */
+.table-card {
+  max-width: 980px;          /* helps cards maintain a consistent measure */
+  margin-left: 0;            /* anchor to main's left edge (which is after the sidebar) */
+  margin-right: auto;
+}
+
+/* If you had a header or topbar that should sit above the sidebar,
+   ensure the main header aligns visually (no change needed if you don't have topbar) */
+.main-header { margin-bottom: 8px; }
+
+/* On small screens we keep the natural flow (sidebar will still be fixed),
+   but when viewport is narrow we hide the fixed behavior to avoid overlap.
+   This helps mobile/responsive behaviour. */
+@media (max-width: 980px) {
+  .sidebar {
+    position: relative;    /* stack above content normally on small screens */
+    width: 100%;
+    height: auto;
+  }
+  .main {
+    margin-left: 0;
+    margin-right: 16px;
+    max-width: 100%;
+  }
+  .table-card { max-width: 100%; }
+}
+/* ===== Redeem page styles ===== */
+
+.redeem-area {
+  display: flex;
+  justify-content: center;       /* center the card horizontally in main */
+  margin-top: 12px;
+  margin-bottom: 60px;
+}
+
+.redeem-card {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 980px;
+  box-shadow: 0 8px 30px rgba(12,18,25,0.04);
+  box-sizing: border-box;
+}
+
+/* Left column (inputs) */
+.redeem-card-left { flex: 1 1 560px; min-width: 240px; }
+
+.label-large { font-size: 18px; font-weight:700; color:#096a97; display:block; margin-bottom:8px; }
+
+.input-row { display:flex; gap:12px; align-items:center; }
+.input-row .form-input { flex:1 1 auto; min-width:200px; }
+.input-row button { white-space:nowrap; }
+
+/* right column (preview) */
+.redeem-card-right { width: 260px; min-width:180px; }
+.preview-mini { background:#fbfcfe; border-radius:8px; padding:12px; border:1px solid #eef3f6; }
+.preview-title { font-weight:700; color:#0780b9; margin-bottom:8px; }
+.preview-body { font-size:14px; color:#4b4f55; }
+.preview-field { margin-bottom:8px; }
+
+/* result area and action buttons */
+.redeem-result { margin-top:14px; min-height:36px; }
+.redeem-action { margin-top:12px; display:flex; gap:8px; align-items:center; }
+
+/* modal */
+.modal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,0.32);
+  z-index: 2000;
+  align-items:center;
+  justify-content:center;
+  padding: 24px;
+}
+.modal[aria-hidden="false"] { display:flex; }
+.modal-card {
+  background:#fff;
+  padding:18px;
+  border-radius:10px;
+  max-width:560px;
+  width:100%;
+  box-shadow: 0 12px 40px rgb(56, 72, 90);
+}
+
+/* smaller screens: stack preview under inputs */
+@media (max-width: 880px) {
+  .redeem-card { flex-direction: column; }
+  .redeem-card-right { width: 100%; }
+  .redeem-card-left { width: 100%; }
+  .input-row { flex-wrap:wrap; }
+  .input-row .form-input { min-width: 100%; }
+}
+/* Optional: small tuning for server message box container */
+#server-msg-area { margin-top:12px; }
+#server-msg-area div { font-size:14px; line-height:1.3; }
+/* ===== server message classes (robust, highest specificity via class names) ===== */
+.server-msg {
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid transparent;
+  font-size:14px;
+  position:relative;
+  box-shadow:0 4px 12px rgba(0,0,0,0.04);
+  color: inherit; /* fallback */
+}
+
+/* variants */
+.server-msg--success {
+  background: #E6F8F3;
+  border-color: #A4E4CC;
+  color: #0B6B43;
+}
+.server-msg--error {
+  background: #FDECEA;
+  border-color: #F5C6CB;
+  color: #8B1D1D;
+}
+.server-msg--info {
+  background: #E9F4FF;
+  border-color: #BFDFFF;
+  color: #055C92;
+}
+.server-msg--warning {
+  background: #FFF7E6;
+  border-color: #F5E1A4;
+  color: #A76C00;
+}
+
+/* icon + text styling */
+.server-msg .server-msg__icon {
+  font-weight:700;
+  font-size:18px;
+  line-height:1;
+  padding-top:2px;
+}
+.server-msg .server-msg__text {
+  flex:1;
+  white-space:pre-wrap;
+}
+.server-msg .server-msg__close {
+  background:transparent;
+  border:none;
+  font-size:18px;
+  cursor:pointer;
+  color:inherit;
+}
+/* ************* Strong, specific server message theme (forces colors) ************* */
+/* Place this at the very end of dashboard.css */
+
+#server-msg-area .server-msg {
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:12px !important;
+  padding:12px 14px !important;
+  border-radius:10px !important;
+  border:1px solid transparent !important;
+  font-size:14px !important;
+  position:relative !important;
+  box-shadow:0 4px 12px rgba(0,0,0,0.04) !important;
+}
+
+/* explicit variants (very high specificity + !important) */
+#server-msg-area .server-msg--success {
+  background: #E6F8F3 !important;
+  border-color: #A4E4CC !important;
+  color: #0B6B43 !important;
+}
+#server-msg-area .server-msg--error {
+  background: #FDECEA !important;
+  border-color: #F5C6CB !important;
+  color: #8B1D1D !important;
+}
+#server-msg-area .server-msg--info {
+  background: #E9F4FF !important;
+  border-color: #BFDFFF !important;
+  color: #055C92 !important;
+}
+#server-msg-area .server-msg--warning {
+  background: #FFF7E6 !important;
+  border-color: #F5E1A4 !important;
+  color: #A76C00 !important;
+}
+
+/* inner parts */
+#server-msg-area .server-msg__icon { font-weight:700; font-size:18px; line-height:1; padding-top:2px; color: inherit !important; }
+#server-msg-area .server-msg__text { flex:1; white-space:pre-wrap; color: inherit !important; }
+#server-msg-area .server-msg__close { background:transparent; border:none; font-size:18px; cursor:pointer; color: inherit !important; }
+.coupons-table td, .coupons-table th { padding:8px 10px; border:1px solid #eee; }

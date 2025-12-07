@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% block title %}Redeem Coupon - CouponApp{% endblock %}
+
+{% block content %}
+<div class="app-container">
+
+  <!-- Sidebar (unchanged) -->
+  <aside class="sidebar" aria-hidden="true">
+    <div class="sidebar-brand">CouponApp</div>
+    <nav class="side-nav" aria-label="Main navigation">
+      <a class="nav-item" href="{{ url_for('main.index') }}">Dashboard</a>
+      <a class="nav-item" href="{{ url_for('main.register') }}">Register</a>
+      <a class="nav-item active" href="{{ url_for('main.redeem') }}">Redeem</a>
+      <a class="nav-item" href="{{ url_for('main.import_excel') }}">Import</a>
+      <a class="nav-item" href="{{ url_for('main.export_excel') }}">Export</a>
+      <a class="nav-item" href="{{ url_for('main.admin') }}">Admin</a>
+      <a class="nav-item" href="{{ url_for('main.logs') }}">Logs</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="main-header">
+      <h1 class="title">Redeem Coupon</h1>
+      <div class="header-meta">Validate and redeem customer coupons</div>
+    </header>
+
+    <!-- Centered redeem card -->
+    <section class="redeem-area">
+      <div class="redeem-card">
+
+        <div class="redeem-card-left">
+          <label for="redeem-code" class="label-large">Enter coupon code</label>
+          <div class="input-row">
+            <input id="redeem-code" class="form-input" value="{{ code or '' }}" placeholder="e.g. WELCOME10" autofocus />
+            <button class="btn primary" id="redeem-check">Check</button>
+            <button class="btn ghost" id="redeem-clear">Clear</button>
+          </div>
+
+          <div id="redeem-result" class="redeem-result" aria-live="polite"></div>
+
+          <div id="redeem-action" class="redeem-action" style="display:none;">
+            <button class="btn primary" id="redeem-mark-btn">Mark Claimed</button>
+            <button class="btn ghost" id="redeem-cancel-btn">Cancel</button>
+          </div>
+
+          <div class="hint" style="margin-top:14px;">
+            Tip: you can paste the coupon code from the phone call. The app will check status before marking it redeemed.
+          </div>
+        </div>
+
+        <div class="redeem-card-right" aria-hidden="true">
+          <div class="preview-mini">
+            <div class="preview-title">Preview</div>
+            <div class="preview-body">
+              <div class="preview-field"><strong>Code:</strong> <span id="pv-code">—</span></div>
+              <div class="preview-field"><strong>Status:</strong> <span id="pv-status">—</span></div>
+              <div class="preview-field"><strong>Issued:</strong> <span id="pv-issued">—</span></div>
+              <div class="preview-field"><strong>Expires:</strong> <span id="pv-expires">—</span></div>
+              <div class="preview-field"><strong>Redeemed:</strong> <span id="pv-redeemed">—</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Confirmation modal (simple, accessible) -->
+<div id="confirm-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="confirm-title">
+  <div class="modal-card">
+    <h3 id="confirm-title">Confirm redemption</h3>
+    <p id="confirm-text">Are you sure you want to mark coupon <strong id="confirm-code">...</strong> as claimed?</p>
+    <div style="display:flex; gap:10px; margin-top:12px; justify-content:flex-end;">
+      <button class="btn ghost" id="confirm-cancel">No, cancel</button>
+      <button class="btn primary" id="confirm-yes">Yes, mark claimed</button>
+    </div>
+  </div>
+</div>
+
+<!-- Script: preview + validation + redeem flow -->
+<script>
+/* Redeem page client logic — prettier colored messages + Enter key to Check */
+
+/* shorthand */
+function dom(id){ return document.getElementById(id); }
+
+/* Create a styled message box under redeem-result.
+   level: "success" | "error" | "info" | "warning"
+*/
+function showServerMessage(msg, level="info") {
+  console.log("[showServerMessage] level=", level, " msg=", msg);
+
+  // remove previous area entirely
+  let old = document.getElementById('server-msg-area');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+
+  // create container wrapper
+  const area = document.createElement('div');
+  area.id = 'server-msg-area';
+  area.style.marginTop = '12px';
+
+  const wrapper = document.createElement('div');
+  // enforce classes used by CSS
+  wrapper.className = 'server-msg server-msg--' + (level || 'info');
+
+  // icon
+  const icon = document.createElement('div');
+  icon.className = 'server-msg__icon';
+  icon.textContent = (level === 'success' ? '✔' : (level === 'error' ? '✖' : (level === 'warning' ? '⚠' : 'ℹ')));
+
+  // text
+  const text = document.createElement('div');
+  text.className = 'server-msg__text';
+  text.innerHTML = msg;
+
+  // close
+  const close = document.createElement('button');
+  close.className = 'server-msg__close';
+  close.setAttribute('aria-label', 'Close message');
+  close.innerHTML = '&times;';
+  close.addEventListener('click', () => { if (area && area.parentNode) area.parentNode.removeChild(area); });
+
+  // assemble
+  wrapper.appendChild(icon);
+  wrapper.appendChild(text);
+  wrapper.appendChild(close);
+  area.appendChild(wrapper);
+
+  // append
+  const host = document.getElementById('redeem-result');
+  if (!host) {
+    console.warn("[showServerMessage] host element #redeem-result not found. falling back to body.");
+    document.body.appendChild(area);
+  } else {
+    host.appendChild(area);
+  }
+
+  // small sanity log after adding
+  console.log("[showServerMessage] appended area with classes:", wrapper.className);
+}
+
+/* Clear the server message area */
+function clearServerMessage() {
+  const a = dom('server-msg-area'); if (a) a.remove();
+}
+
+/* Update preview fields on right using server data */
+function updatePreviewFieldsFromServer(data) {
+  dom('pv-code').innerText = data.code || '—';
+  dom('pv-status').innerText = data.status || '—';
+  dom('pv-issued').innerText = data.valid_from || '—';
+  dom('pv-expires').innerText = data.valid_to || '—';
+  dom('pv-redeemed').innerText = (data.redeemed_count !== undefined ? data.redeemed_count + ' / ' + (data.max_redemptions||1) : '—');
+}
+
+/* call server validate */
+async function validateCode(code) {
+  try {
+    const res = await fetch("{{ url_for('main.api_redeem_validate') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+      credentials: "same-origin"
+    });
+    const data = await res.json().catch(()=>({ok:false, message:"Invalid server response"}));
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    return { ok:false, data: { message: "Network error" } };
+  }
+}
+
+/* call server to mark claimed */
+async function markClaimed(code) {
+  try {
+    const res = await fetch("{{ url_for('main.api_redeem_mark') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+      credentials: "same-origin"
+    });
+    const data = await res.json().catch(()=>({ok:false, message:"Invalid server response"}));
+    return { ok: res.ok, data };
+  } catch (e) {
+    return { ok:false, data:{message:"Network error"} };
+  }
+}
+
+/* UI wiring + Enter key behaviour */
+(function () {
+  const input = dom("redeem-code");
+  const btnCheck = dom("redeem-check");
+  const btnClear = dom("redeem-clear");
+  const actionBox = dom("redeem-action");
+  const btnMark = dom("redeem-mark-btn");
+  const btnCancel = dom("redeem-cancel-btn");
+
+  const modal = dom("confirm-modal");
+  const confirmCode = dom("confirm-code");
+  const confirmYes = dom("confirm-yes");
+  const confirmCancel = dom("confirm-cancel");
+
+  // Pressing Enter in the input triggers the same as clicking Check
+  input.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      btnCheck.click();
+    }
+  });
+
+  // live preview of code while typing; clear server messages
+  input.addEventListener("input", () => {
+    const code = input.value.trim();
+    updatePreviewFieldsFromServer({ code });
+    clearServerMessage();
+    actionBox.style.display = "none";
+  });
+
+  btnClear.addEventListener("click", (e) => {
+    e.preventDefault();
+    input.value = "";
+    updatePreviewFieldsFromServer({});
+    clearServerMessage();
+    actionBox.style.display = "none";
+    input.focus();
+  });
+
+  btnCheck.addEventListener("click", async (e) => {
+    e.preventDefault();
+    clearServerMessage();
+
+    const code = input.value.trim();
+    if (!code) {
+      showServerMessage("Please enter a coupon code to check.", "error");
+      return;
+    }
+
+    showServerMessage("Checking coupon — please wait…", "info");
+    const r = await validateCode(code);
+
+    if (!r.ok) {
+      // show server-provided message or default
+      showServerMessage(r.data?.message || "Validation failed", "error");
+      actionBox.style.display = "none";
+      // display server dates if available
+      if (r.data && (r.data.valid_from || r.data.valid_to)) {
+        updatePreviewFieldsFromServer(Object.assign({ code }, r.data));
+      }
+      return;
+    }
+
+    const d = r.data;
+    updatePreviewFieldsFromServer(Object.assign({ code }, d));
+
+    if (d.ok) {
+      showServerMessage("Coupon is valid for redemption.", "success");
+      actionBox.style.display = "block";
+      confirmCode.innerText = code;
+
+      btnMark.onclick = () => {
+        modal.setAttribute("aria-hidden", "false");
+        modal.style.display = "flex";
+      };
+      btnCancel.onclick = () => {
+        actionBox.style.display = "none";
+      };
+    } else {
+      showServerMessage(d.message || "Coupon cannot be redeemed", "error");
+      actionBox.style.display = "none";
+    }
+  });
+
+  // modal handlers
+  confirmCancel.addEventListener("click", () => {
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+  });
+
+  confirmYes.addEventListener("click", async () => {
+    confirmYes.disabled = true;
+    confirmYes.innerText = "Marking…";
+    const code = input.value.trim();
+    const res = await markClaimed(code);
+    confirmYes.disabled = false;
+    confirmYes.innerText = "Yes, mark claimed";
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+
+    if (res.ok && res.data && res.data.ok) {
+      showServerMessage("Redeemed successfully!", "success");
+      actionBox.style.display = "none";
+      // increment redeemed count visually if present
+      const pv = dom('pv-redeemed');
+      const txt = pv.innerText || '';
+      const parts = txt.split(' / ');
+      const cur = parseInt(parts[0]) || 0;
+      const max = parts[1] || (res.data.max_redemptions || '1');
+      pv.innerText = (cur + 1) + ' / ' + max;
+    } else {
+      showServerMessage(res.data?.message || "Redeem failed", "error");
+    }
+  });
+
+  // close modal when clicking outside
+  modal.addEventListener("click", (ev) => {
+    if (ev.target === modal) {
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden", "true");
+    }
+  });
+
+  // initial populate if code provided via query
+  if (input.value.trim()) {
+    updatePreviewFieldsFromServer({ code: input.value.trim() });
+  }
+
+})();
+</script>
+
+
+{% endblock %}

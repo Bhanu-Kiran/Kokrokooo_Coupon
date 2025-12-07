@@ -1,0 +1,315 @@
+{# Register coupon page (two-column form + live preview) #}
+{% extends "base.html" %}
+{% block title %}Register Coupon - CouponApp{% endblock %}
+
+{% block head_extra %}
+<!-- page-specific CSS can be added here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+
+  {# Sidebar included for consistent layout (same as dashboard) #}
+  <aside class="sidebar">
+    <div class="sidebar-brand">CouponApp</div>
+    <nav class="side-nav">
+      <a class="nav-item" href="{{ url_for('main.index') }}">Dashboard</a>
+      <a class="nav-item active" href="{{ url_for('main.register') }}">Register</a>
+      <a class="nav-item" href="{{ url_for('main.redeem') }}">Redeem</a>
+      <a class="nav-item" href="{{ url_for('main.import_excel') }}">Import</a>
+      <a class="nav-item" href="{{ url_for('main.export_excel') }}">Export</a>
+      <a class="nav-item" href="{{ url_for('main.admin') }}">Admin</a>
+      <a class="nav-item" href="{{ url_for('main.logs') }}">Logs</a>
+    </nav>
+  </aside>
+
+  {# Main content: left = form, right = preview #}
+  <main class="main">
+    <header class="main-header">
+      <h1 class="title">Register Coupon</h1>
+      <div class="header-meta">Create and preview coupons before saving</div>
+    </header>
+
+    <section class="table-card" style="display:flex; gap:20px; align-items:flex-start;">
+      {# ===== LEFT: FORM ===== #}
+      <div style="flex:1; min-width:480px;">
+        <form id="coupon-form" method="post" action="{{ url_for('main.register') }}">
+          <div class="form-grid">
+            <!-- Row 1: Code (main column) + Max redemptions (small column 1) + (empty) -->
+            <div class="col-main">
+              <label>Code <span style="color:#C62828">*</span></label>
+              <input name="code" id="code" required class="form-input" value="{{ request.form.code or '' }}" />
+            </div>
+            <div class="col-small-1">
+              <label>Max redemptions</label>
+              <input type="number" name="max_redemptions" id="max_redemptions" min="1"
+                value="{{ request.form.max_redemptions or 1 }}" class="form-input" />
+            </div>
+            <div class="col-small-2"></div>
+
+            <!-- Row 2: Description (full width) -->
+            <div class="full">
+              <label>Description</label>
+              <input name="description" id="description" class="form-input"
+                value="{{ request.form.description or '' }}" />
+            </div>
+
+            <!-- Row 3: Issued at (main) | Validity value (small1) | Validity unit (small2) -->
+            <div class="col-main">
+              <label>Issued at</label>
+              <input type="datetime-local" name="issued_at" id="issued_at" class="form-input"
+                value="{{ request.form.issued_at or '' }}" />
+              <div style="font-size:12px; color:#8B8F95; margin-top:4px;">Leave blank to use current time</div>
+            </div>
+            <div class="col-small-1">
+              <label>Validity value</label>
+              <input type="number" name="validity_value" id="validity_value" min="1"
+                value="{{ request.form.validity_value or 30 }}" class="form-input" />
+            </div>
+            <div class="col-small-2">
+              <label>Validity unit</label>
+              <select name="validity_unit" id="validity_unit" class="form-input">
+                <option value="days" {% if (request.form.validity_unit or 'days' )=='days' %}selected{% endif %}>days
+                </option>
+                <option value="hours" {% if request.form.validity_unit=='hours' %}selected{% endif %}>hours</option>
+              </select>
+            </div>
+
+            <!-- Row 4: Issued to (main) | Tags (small1) | empty -->
+            <div class="col-main">
+              <label>Issued to (optional)</label>
+              <input name="issued_to" id="issued_to" class="form-input" value="{{ request.form.issued_to or '' }}" />
+            </div>
+            <div class="col-small-1">
+              <label>Tags (comma separated)</label>
+              <input name="tags" id="tags" class="form-input" value="{{ request.form.tags or '' }}" />
+            </div>
+            <div class="col-small-2"></div>
+
+            <!-- Row 5: Buttons (full width) -->
+            <div class="full" style="display:flex; gap:12px; margin-top:6px;">
+              <button type="submit" class="btn">Save Coupon</button>
+              <button type="button" id="btn-preview" class="btn ghost" onclick="updatePreview()">Check Coupon</button>
+              <a class="btn ghost" href="{{ url_for('main.index') }}">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+
+
+      {# ===== RIGHT: LIVE PREVIEW CARD ===== #}
+      <div style="width:360px;">
+        <div class="stat-card" style="padding:18px; border-radius:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:18px;" id="preview-code">WELCOME10</div>
+              <div style="color:#8B8F95; font-size:13px;" id="preview-desc">10% off first order</div>
+            </div>
+            <div id="preview-status"><span class="pill pill-active">Active</span></div>
+          </div>
+
+          <hr style="margin:12px 0; border-color:#F0F2F4;" />
+
+          <div style="font-size:13px; color:#6b6f74;">
+            <div><strong>Issued at:</strong> <span id="preview-issued">—</span></div>
+            <div style="margin-top:6px;"><strong>Expires:</strong> <span id="preview-expires">—</span></div>
+            <div style="margin-top:6px;"><strong>Validity:</strong> <span id="preview-validity">—</span></div>
+            <div style="margin-top:6px;"><strong>Issued to:</strong> <span id="preview-issued-to">—</span></div>
+            <div style="margin-top:6px;"><strong>Tags:</strong> <span id="preview-tags">—</span></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <footer class="page-footer" style="margin-top:18px;">
+      <div>Form help: code is required. Use ISO local time for issued at if manually setting (YYYY-MM-DDTHH:MM).</div>
+    </footer>
+
+  </main>
+</div>
+
+{# ===== JavaScript: handle live preview and client-side expiration calc ===== #}
+<script>
+/* Client preview + server-side validation for Generate Preview button */
+
+function parseDatetimeLocal(value) {
+  if (!value) return null;
+  try {
+    return new Date(value);
+  } catch (e) {
+    return null;
+  }
+}
+
+function formatLocal(dt) {
+  if (!dt) return '—';
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth()+1).padStart(2,'0');
+  const d = String(dt.getDate()).padStart(2,'0');
+  const hh = String(dt.getHours()).padStart(2,'0');
+  const mm = String(dt.getMinutes()).padStart(2,'0');
+  return `${y}-${m}-${d} ${hh}:${mm}`;
+}
+
+function computeExpiry(issuedAt, value, unit) {
+  if (!issuedAt) issuedAt = new Date();
+  let exp = new Date(issuedAt.getTime());
+  if (unit === 'hours') {
+    exp.setHours(exp.getHours() + Number(value || 0));
+  } else {
+    exp.setDate(exp.getDate() + Number(value || 0));
+  }
+  return exp;
+}
+
+function updateClientPreviewFromForm() {
+  const code = document.getElementById('code').value || '—';
+  const desc = document.getElementById('description').value || '—';
+  const issuedVal = document.getElementById('issued_at').value;
+  const validityValue = document.getElementById('validity_value').value || '0';
+  const validityUnit = document.getElementById('validity_unit').value || 'days';
+  const issuedTo = document.getElementById('issued_to').value || '—';
+  const tags = document.getElementById('tags').value || '—';
+
+  const issuedDt = parseDatetimeLocal(issuedVal);
+  const issuedDisplay = issuedDt ? formatLocal(issuedDt) : formatLocal(new Date());
+  const expiresDt = computeExpiry(issuedDt || new Date(), validityValue, validityUnit);
+  const expiresDisplay = formatLocal(expiresDt);
+
+  document.getElementById('preview-code').innerText = code;
+  document.getElementById('preview-desc').innerText = desc;
+  document.getElementById('preview-issued').innerText = issuedDisplay;
+  document.getElementById('preview-expires').innerText = expiresDisplay;
+  document.getElementById('preview-validity').innerText = `${validityValue} ${validityUnit}`;
+  document.getElementById('preview-issued-to').innerText = issuedTo;
+  document.getElementById('preview-tags').innerText = tags;
+
+  // status based on client calc only (server may override on validate)
+  const now = new Date();
+  const statusEl = document.getElementById('preview-status');
+  if (expiresDt < now) {
+    statusEl.innerHTML = '<span class="pill pill-expired">Expired</span>';
+  } else {
+    statusEl.innerHTML = '<span class="pill pill-active">Active</span>';
+  }
+}
+
+/* Update on input for instant feedback */
+document.addEventListener('input', function (e) {
+  if (e.target && e.target.form && e.target.form.id === 'coupon-form') {
+    updateClientPreviewFromForm();
+  }
+});
+
+/* Helper to show server warnings (below preview card) */
+function showServerMessage(msg, level='error') {
+  // create or reuse an area under the preview
+  let area = document.getElementById('server-msg-area');
+  if (!area) {
+    area = document.createElement('div');
+    area.id = 'server-msg-area';
+    area.style.marginTop = '10px';
+    area.style.fontSize = '13px';
+    const previewCard = document.querySelector('.stat-card[style*="padding:18px"]') || document.querySelector('.table-card');
+    if (previewCard) previewCard.appendChild(area);
+    else document.getElementById('preview-status').parentNode.appendChild(area);
+  }
+  area.innerHTML = `<div style="color:${ level==='error' ? '#C62828' : '#b86d00' }">${msg}</div>`;
+}
+
+/* Clear server message */
+function clearServerMessage() {
+  const area = document.getElementById('server-msg-area');
+  if (area) area.innerHTML = '';
+}
+
+/* Disable/enable Save button */
+function setSaveDisabled(disabled) {
+  const saveBtn = document.querySelector('#coupon-form button[type="submit"]');
+  if (saveBtn) saveBtn.disabled = !!disabled;
+  if (disabled) saveBtn.classList.add('disabled'); else saveBtn.classList.remove('disabled');
+}
+
+/* ---- AJAX validation handler (called when user clicks Generate Preview) ---- */
+async function validateWithServer() {
+  clearServerMessage();
+  setSaveDisabled(false);
+  const payload = {
+    code: document.getElementById('code').value || '',
+    issued_at: document.getElementById('issued_at').value || '',
+    validity_value: Number(document.getElementById('validity_value').value || 0),
+    validity_unit: document.getElementById('validity_unit').value || 'days'
+  };
+
+  // show a small transient spinner in the preview area (simple text)
+  const prevStatus = document.getElementById('preview-status');
+  const oldStatusHTML = prevStatus.innerHTML;
+  prevStatus.innerHTML = '<span class="pill">Checking…</span>';
+
+  try {
+    const res = await fetch("{{ url_for('main.api_validate_coupon') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      credentials: "same-origin"
+    });
+
+    if (!res.ok) {
+      // assume JSON error with message
+      const err = await res.json().catch(()=>({message: 'Validation failed'}));
+      showServerMessage(err.message || 'Validation failed', 'error');
+      prevStatus.innerHTML = oldStatusHTML;
+      setSaveDisabled(true);
+      return;
+    }
+
+    const data = await res.json();
+
+    // Update preview with server computed dates & status
+    if (data.valid_from) document.getElementById('preview-issued').innerText = data.valid_from;
+    if (data.valid_to) document.getElementById('preview-expires').innerText = data.valid_to;
+    if (data.status) {
+      document.getElementById('preview-status').innerHTML = `<span class="pill pill-${data.status.toLowerCase()}">${data.status}</span>`;
+    }
+
+    // If code exists, show warning and block saving
+    if (data.code_exists) {
+      showServerMessage(data.message || "Coupon code already exists", "error");
+      setSaveDisabled(true);
+      return;
+    }
+
+    // If server flagged non-ok but not code_exists, show message but allow save? For now block
+    if (!data.ok) {
+      showServerMessage(data.message || "Validation warning", "error");
+      setSaveDisabled(true);
+      return;
+    }
+
+    // All good:
+    clearServerMessage();
+    setSaveDisabled(false);
+
+  } catch (e) {
+    prevStatus.innerHTML = oldStatusHTML;
+    showServerMessage("Server validation failed (network).", "error");
+    setSaveDisabled(false);
+  }
+}
+
+/* Wire the Generate Preview button to call server validation (and update UI) */
+document.getElementById('btn-preview').addEventListener('click', function (ev) {
+  ev.preventDefault();
+  // run client preview immediately so UI is responsive
+  updateClientPreviewFromForm();
+  // then call the server for authoritative checks
+  validateWithServer();
+});
+
+// initial client preview
+updateClientPreviewFromForm();
+</script>
+
+
+{% endblock %}

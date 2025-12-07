@@ -1,0 +1,29 @@
+# ...existing code...
+# Ignore .venv virtual environments anywhere
+.venv/
+**/.venv/
+
+# Ignore Data (anycase common variants) folders and their contents
+./Data/
+**/Data/
+data/
+**/data/
+
+# Ignore image files named 'images', 'images.py' and 'images.ipynb' anywhere
+images
+**/images
+images.py
+**/images.py
+images.ipynb
+**/images.ipynb
+
+# Ignore Code.zip archives anywhere
+Code.zip
+**/Code.zip
+
+# Ignore Python byte-compiled files and __pycache__ folders
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyc
+*.pyo

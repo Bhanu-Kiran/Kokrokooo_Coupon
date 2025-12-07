@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}CouponApp{% endblock %}</title>
+  <!-- common styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+  {# -------------------------
+     Flash messages area
+     - We render Flask flashed messages here
+     - Each flash gets a close button and will auto-hide via JS
+     ------------------------- #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flash-list" id="flash-list">
+        {% for category, msg in messages %}
+          <li class="flash flash-{{ category }}" role="status" aria-live="polite">
+            <button class="flash-close" aria-label="Close message">&times;</button>
+            <div class="flash-content">{{ msg }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  {# -------------------------
+     Flash message behavior JS
+     - Auto-dismiss after a timeout
+     - Allow manual close (click '×')
+     - New flashes will get the behavior automatically on page load
+     ------------------------- #}
+  <script>
+  (function() {
+    // Time before auto-dismiss (ms)
+    const DISMISS_AFTER_MS = 5000; // 5 seconds - change this value to suit your needs
+
+    // Helper: fade out element, then remove from DOM
+    function fadeOutAndRemove(el, duration=400) {
+      el.style.transition = `opacity ${duration}ms ease, transform ${duration}ms ease`;
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-6px)';
+      setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, duration + 10);
+    }
+
+    // Attach behavior to a single flash item
+    function attachBehaviorToFlash(flashEl) {
+      if (!flashEl) return;
+
+      // Manual close button
+      const btn = flashEl.querySelector('.flash-close');
+      if (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          fadeOutAndRemove(flashEl);
+        });
+      }
+
+      // Auto dismiss after timeout
+      const t = setTimeout(() => {
+        fadeOutAndRemove(flashEl);
+      }, DISMISS_AFTER_MS);
+
+      // If user hovers, pause the timeout; resume on mouseleave
+      flashEl.addEventListener('mouseenter', () => clearTimeout(t));
+      flashEl.addEventListener('mouseleave', () => {
+        // restart a shorter timeout when leaving
+        setTimeout(() => fadeOutAndRemove(flashEl), Math.max(1000, DISMISS_AFTER_MS / 2));
+      });
+    }
+
+    // Initialize on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function () {
+      const list = document.getElementById('flash-list');
+      if (!list) return;
+      const items = Array.from(list.querySelectorAll('.flash'));
+      items.forEach(attachBehaviorToFlash);
+    });
+  })();
+  </script>
+</body>
+</html>

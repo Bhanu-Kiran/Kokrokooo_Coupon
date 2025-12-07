@@ -1,0 +1,172 @@
+{# -----------------------------------------------------------
+  This page is the main Dashboard view.
+  It shows:
+  - Sidebar navigation
+  - Stats cards (active, redeemed, expiring)
+  - Table of recent coupons
+  - Preview footer information
+  ----------------------------------------------------------- #}
+
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CouponApp{% endblock %}
+
+{% block head_extra %}
+<!-- Any page-specific CSS or JS can go here -->
+{% endblock %}
+
+
+{% block content %}
+<div class="app-container">
+
+ {# -----------------------------------------------------------
+    SIDEBAR (static navigation on the left)
+    ----------------------------------------------------------- #}
+ <aside class="sidebar">
+   <div class="sidebar-brand">CouponApp</div>
+
+   <nav class="side-nav">
+     <!-- Active page highlighted -->
+     <a class="nav-item active" href="{{ url_for('main.index') }}">Dashboard</a>
+
+     <!-- Other navigation pages -->
+     <a class="nav-item" href="{{ url_for('main.register') }}">Register</a>
+     <a class="nav-item" href="{{ url_for('main.redeem') }}">Redeem</a>
+     <a class="nav-item" href="{{ url_for('main.import_excel') }}">Import</a>
+     <a class="nav-item" href="{{ url_for('main.export_excel') }}">Export</a>
+     <a class="nav-item" href="{{ url_for('main.admin') }}">Admin</a>
+     <a class="nav-item" href="{{ url_for('main.logs') }}">Logs</a>
+   </nav>
+ </aside>
+
+
+ {# -----------------------------------------------------------
+    MAIN CONTENT AREA (right side)
+    ----------------------------------------------------------- #}
+ <main class="main">
+
+   {# ---------------------------------------------------------
+      HEADER SECTION — page title & metadata display
+      --------------------------------------------------------- #}
+   <header class="main-header">
+     <h1 class="title">Dashboard</h1>
+
+     <!-- Static info for now (server/tz info) -->
+     <div class="header-meta">
+       Server: <strong>local</strong> · TZ: <strong>Asia/Kolkata</strong>
+     </div>
+   </header>
+
+
+   {# ---------------------------------------------------------
+      STATS CARDS — Top summary values
+      Values come from Python dict: stats = {"active": ..., ...}
+      --------------------------------------------------------- #}
+   <section class="stats-row">
+
+     <!-- Active Coupons count -->
+     <div class="stat-card">
+       <div class="stat-value">{{ stats.active }}</div>
+       <div class="stat-label">Active Coupons</div>
+     </div>
+
+     <!-- Redeemed Today -->
+     <div class="stat-card">
+       <div class="stat-value">{{ stats.redeemed_today }}</div>
+       <div class="stat-label">Redeemed Today</div>
+     </div>
+
+     <!-- Expiring Soon -->
+     <div class="stat-card">
+       <div class="stat-value">{{ stats.expiring_24h }}</div>
+       <div class="stat-label">Expiring (24h)</div>
+     </div>
+
+   </section>
+
+
+   {# ---------------------------------------------------------
+      RECENT COUPONS TABLE
+      Lists dummy or DB coupons passed from routes.py
+
+      coupons = [
+        {code: "...", description:"...", valid_from:"...", valid_to:"...", status:"Active", ...},
+        ...
+      ]
+      --------------------------------------------------------- #}
+   <section class="table-card">
+
+     <!-- Table Header (Title + small actions) -->
+     <div class="table-card-header">
+       <h2>Recent Coupons</h2>
+
+       <!-- Right-aligned small actions -->
+       <div class="table-actions">
+         <a class="btn small" href="{{ url_for('main.register') }}">New Coupon</a>
+         <a class="btn small ghost" href="{{ url_for('main.import_excel') }}">Import</a>
+       </div>
+     </div>
+
+     {# -------------------------------------------------------
+        DATA TABLE
+        ------------------------------------------------------- #}
+     <table class="coupons-table" cellpadding="0" cellspacing="0" border="0" role="grid">
+
+       <!-- Table column names -->
+       <thead>
+         <tr>
+           <th>Code</th>
+           <th>Description</th>
+           <th>Valid From</th>
+           <th>Valid To</th>
+           <th>Status</th>
+           <th class="col-action">Action</th>
+         </tr>
+       </thead>
+
+       <!-- Table rows dynamically generated -->
+       <tbody>
+         {% for c in coupons %}
+         <tr>
+           <!-- Coupon fields -->
+           <td class="mono">{{ c.code }}</td>
+           <td>{{ c.description }}</td>
+           <td>{{ c.valid_from }}</td>
+           <td>{{ c.valid_to }}</td>
+
+           <!-- Dynamic status styles: pill-active, pill-expired, etc -->
+           <td>
+             <span class="pill pill-{{ c.status|lower|replace(' ', '-') }}">
+               {{ c.status }}
+             </span>
+           </td>
+
+           <!-- Action button changes depending on coupon status -->
+           <td class="col-action">
+             {% if c.status == 'Active' %}
+               <!-- Takes you to Redeem page with code prefilled -->
+               <a class="btn small" href="{{ url_for('main.redeem', code=c.code) }}">Redeem</a>
+             {% else %}
+               <!-- Non-active coupons: allow checking -->
+               <a class="btn small ghost" href="{{ url_for('main.redeem', code=c.code) }}">Check</a>
+             {% endif %}
+           </td>
+         </tr>
+         {% endfor %}
+       </tbody>
+
+     </table>
+   </section>
+
+
+   {# ---------------------------------------------------------
+      FOOTER AREA (bottom small text)
+      --------------------------------------------------------- #}
+   <footer class="page-footer">
+     <div>Preview mode — dummy data</div>
+     <div>Last generated: {{ generated_at }}</div>
+   </footer>
+
+ </main>
+</div>
+{% endblock %}

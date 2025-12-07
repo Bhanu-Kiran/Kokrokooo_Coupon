@@ -1,0 +1,129 @@
+# requirements.txt — CouponApp
+# Single-file reference of all runtime, optional, dev, and notebook packages.
+# Usage:
+#   python -m venv .venv
+#   .venv/bin/activate        # Linux/macOS
+#   .venv\Scripts\activate     # Windows
+#   pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# NOTE: Versions are pinned for stability. You can relax them later if you prefer.
+
+# -----------------------
+# Core web framework
+# -----------------------
+Flask==3.0.2                       # lightweight web framework
+
+# -----------------------
+# Database / ORM
+# -----------------------
+Flask-SQLAlchemy==3.1.1            # SQLAlchemy integration for Flask
+SQLAlchemy==2.0.20                 # core ORM (explicitly pin to match Flask-SQLAlchemy)
+
+# -----------------------
+# WSGI / Production server
+# -----------------------
+gunicorn==21.2.0                   # production-ready WSGI server (optional for local deploys)
+
+# -----------------------
+# Security & utilities
+# -----------------------
+Werkzeug==3.0.1                    # Flask dependency (pinned)
+bcrypt==4.0.1                      # password hashing (use via werkzeug or directly) - optional
+
+# -----------------------
+# Excel & tabular data (import/export)
+# -----------------------
+pandas==2.2.1                      # dataframes, Excel import/export, CSV handling
+openpyxl==3.1.2                    # Excel engine (for .xlsx read/write)
+xlrd==2.0.1                        # older Excel support (optional, safe to include)
+
+# -----------------------
+# Date/time handling
+# -----------------------
+python-dateutil==2.9.0             # parsing datetimes robustly
+pytz==2024.1                       # timezone utilities (optional; zoneinfo preferred on modern Python)
+
+# -----------------------
+# Forms, validation and serialization
+# -----------------------
+Flask-WTF==1.2.1                   # WTForms integration for Flask (optional)
+WTForms==3.1.2                     # form validation helpers
+marshmallow==3.21.0                # schema validation & (de)serialization (optional)
+
+# -----------------------
+# Auth & sessions
+# -----------------------
+Flask-Login==0.6.3                 # user session management (login/logout)
+itsdangerous==2.1.2                # secure tokens (Flask depends on it)
+
+# -----------------------
+# File uploads & images
+# -----------------------
+Pillow==12.0.0                     # image handling (thumbnails, QR codes, logos)
+
+# -----------------------
+# Concurrency / atomic DB ops (optional helpers)
+# -----------------------
+sqlalchemy-utils==0.40.0           # useful DB fields/utilities (optional)
+
+# -----------------------
+# Packaging & bundling (for making .exe)
+# -----------------------
+pyinstaller==5.12.0                # create executable bundles (Windows .exe)
+zipfile36==0.1.3                   # zipfile extras (optional)
+
+# -----------------------
+# Development & linting (dev tools)
+# -----------------------
+black==24.4.2                      # code formatter
+isort==5.12.0                      # import sorting
+flake8==6.0.0                      # linting
+
+# -----------------------
+# Testing
+# -----------------------
+pytest==7.4.0                      # unit tests
+pytest-flask==1.3.0                # pytest helpers for Flask (optional)
+
+# -----------------------
+# Jupyter / Notebook / Interactive dev
+# -----------------------
+notebook==7.0.0                    # Jupyter Notebook
+ipykernel==6.29.0                  # kernel for notebooks
+nbconvert==7.5.0                   # convert notebooks to HTML/PDF
+ipywidgets==8.1.0                  # interactive widgets (optional)
+
+# -----------------------
+# Plotting & EDA (useful in notebook)
+# -----------------------
+matplotlib==3.8.0                  # plotting
+seaborn==0.13.2                    # statistical plotting on top of matplotlib
+plotly==5.18.0                     # interactive plots
+
+# -----------------------
+# Debugging & REPL helpers
+# -----------------------
+ipython==8.15.0                    # enhanced REPL
+python-dotenv==1.0.0               # load .env config files
+
+# -----------------------
+# Optional DB adapters (choose depending on deployment)
+# -----------------------
+psycopg2-binary==2.9.10            # Postgres driver (if you move to Postgres)
+mysqlclient==2.1.1                 # MySQL / MariaDB driver (alternative)
+
+# -----------------------
+# Misc / utilities
+# -----------------------
+requests==2.31.0                   # HTTP client (useful for integrations)
+python-magic==0.4.27               # detect file types (optional)
+
+# -----------------------
+# Notes / Extras
+# -----------------------
+# - Remove optional packages you don't need to keep the environment light.
+# - If your Windows target is 32-bit or older, check pyinstaller compatibility versions.
+# - Consider using a lockfile (pip-tools or poetry) for reproducible installs across machines.
+#
+# End of file
