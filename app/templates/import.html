@@ -10,9 +10,10 @@
       <a class="nav-item" href="{{ url_for('main.register') }}">Register</a>
       <a class="nav-item" href="{{ url_for('main.redeem') }}">Redeem</a>
       <a class="nav-item active" href="{{ url_for('main.import_excel') }}">Import</a>
-      <a class="nav-item" href="{{ url_for('main.export_xlsx') }}">Export</a>
-     <a class="nav-item" href="{{ url_for('main.admin') }}">Admin</a>
-     <a class="nav-item" href="{{ url_for('main.logs') }}">Logs</a>
+      <a class="nav-item" href="{{ url_for('main.export') }}">Export</a>
+      <a class="nav-item" href="{{ url_for('main.admin') }}">Admin</a>
+      <a class="nav-item" href="{{ url_for('main.logs') }}">Logs</a>
+
     </nav>
   </aside>
 
@@ -25,7 +26,7 @@
     <section class="table-card" style="max-width:880px;">
       <form method="post" enctype="multipart/form-data" action="{{ url_for('main.import_excel') }}">
         <div style="display:flex; gap:12px; align-items:center;">
-          <input type="file" name="file" accept=".csv,.xlsx" />
+          <input type="file" name="file" accept=".csv,.xlsx" required />
           <button class="btn" type="submit">Upload & Import</button>
           <a class="btn ghost" href="{{ url_for('main.export_xlsx') }}">Download Sample Export</a>
         </div>

@@ -1,0 +1,18 @@
+[
+  {
+    "row": 2,
+    "data": {
+      "code": "TEST-C",
+      "description": "Test coupon",
+      "issued_at": "2025-01-12 00:00:00",
+      "valid_from": "2025-01-12 00:00:00",
+      "valid_to": "2025-02-11 00:00:00",
+      "validity_value": 30,
+      "validity_unit": "days",
+      "issued_to": "customer1",
+      "tags": "tagA",
+      "max_redemptions": 1,
+      "redeemed_count": 0
+    }
+  }
+]

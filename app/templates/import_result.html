@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Import Results{% endblock %}
+
+{% block content %}
+<div class="app-container">
+  <aside class="sidebar" aria-hidden="true">
+    <div class="sidebar-brand">CouponApp</div>
+    <nav class="side-nav">
+      <a class="nav-item" href="{{ url_for('main.index') }}">Dashboard</a>
+      <a class="nav-item" href="{{ url_for('main.register') }}">Register</a>
+      <a class="nav-item" href="{{ url_for('main.redeem') }}">Redeem</a>
+      <a class="nav-item active" href="{{ url_for('main.import_excel') }}">Import</a>
+      <a class="nav-item" href="{{ url_for('main.export') }}">Export</a>
+      <a class="nav-item" href="{{ url_for('main.admin') }}">Admin</a>
+      <a class="nav-item" href="{{ url_for('main.logs') }}">Logs</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <section class="table-card" style="max-width:1000px;">
+      <h2>Import summary</h2>
+
+      <div style="display:flex; gap:16px; margin-top:8px;">
+        <div class="stat-card" style="width:auto; padding:12px 16px;">
+          <div style="font-weight:700; font-size:20px;">{{ summary.valid_count }}</div>
+          <div style="font-size:13px; color:#6b6f74;">Valid rows (will import)</div>
+        </div>
+        <div class="stat-card" style="width:auto; padding:12px 16px;">
+          <div style="font-weight:700; font-size:20px;">{{ summary.skipped_count }}</div>
+          <div style="font-size:13px; color:#6b6f74;">Skipped (duplicates)</div>
+        </div>
+        <div class="stat-card" style="width:auto; padding:12px 16px;">
+          <div style="font-weight:700; font-size:20px;">{{ summary.errors_count }}</div>
+          <div style="font-size:13px; color:#6b6f74;">Rows with errors</div>
+        </div>
+      </div>
+
+      {% if summary.errors_count and error_file %}
+      <div style="margin-top:12px;">
+        <a class="btn ghost" href="{{ url_for('main.import_error_file', filename=error_file) }}">Download errors CSV</a>
+      </div>
+      {% endif %}
+
+      <hr style="margin-top:16px; margin-bottom:10px;" />
+
+      <h3>Preview (first {{ preview_ok|length }} successful rows)</h3>
+      <table class="coupons-table">
+        <thead><tr><th>Row</th><th>Code</th></tr></thead>
+        <tbody>
+          {% for r in preview_ok %}
+          <tr><td>{{ r.row }}</td><td>{{ r.data.code }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:14px;">Skipped (first {{ preview_skipped|length }})</h3>
+      <table class="coupons-table">
+        <thead><tr><th>Row</th><th>Code</th><th>Reason</th></tr></thead>
+        <tbody>
+          {% for r in preview_skipped %}
+          <tr><td>{{ r.row }}</td><td>{{ r.code }}</td><td>{{ r.reason }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:14px;">Errors (first {{ preview_errors|length }})</h3>
+      <table class="coupons-table">
+        <thead><tr><th>Row</th><th>Error</th></tr></thead>
+        <tbody>
+          {% for e in preview_errors %}
+          <tr><td>{{ e.row }}</td><td>{{ e.error }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div style="margin-top:18px; display:flex; gap:12px; align-items:center;">
+        <a class="btn" href="{{ url_for('main.index') }}">Back to Dashboard</a>
+
+        {# Confirm Import section: only enable when errors_count == 0 and temp_file exists #}
+        <form method="post" action="{{ url_for('main.import_confirm') }}" style="display:inline;">
+          {% if summary.errors_count and summary.errors_count > 0 %}
+            <input type="hidden" name="temp_file" value="{{ temp_file or '' }}" />
+            <button class="btn" type="submit" disabled>Confirm Import (disabled — fix errors first)</button>
+          {% else %}
+            {% if temp_file %}
+              <input type="hidden" name="temp_file" value="{{ temp_file }}" />
+              <button class="btn" type="submit">Confirm Import Now</button>
+            {% else %}
+              <button class="btn" type="button" disabled>No data to import</button>
+            {% endif %}
+          {% endif %}
+        </form>
+
+        {% if summary.errors_count and error_file %}
+        <a class="btn ghost" href="{{ url_for('main.import_error_file', filename=error_file) }}">Download Errors</a>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}
