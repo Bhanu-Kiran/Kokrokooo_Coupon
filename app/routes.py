@@ -712,17 +712,212 @@ def export_xlsx():
 # --------------------
 # Admin / Logs / validate coupon API
 # --------------------
-@bp.route("/admin")
+# REPLACE existing admin() WITH THE FOLLOWING
+# ---- Admin: Show coupons, delete coupon, clear expired, export coupons (system actions) ----
+from flask import make_response
+from io import StringIO
+import csv
+
+@bp.route("/admin", methods=["GET", "POST"])
 def admin():
-    return render_template("admin.html")
+    """
+    Admin page: list coupons (optional search q query param).
+    Deletion is handled via a dedicated POST route below (admin_delete).
+    """
+    q = (request.args.get("q") or "").strip().lower()
+    query = Coupon.query.order_by(Coupon.id.desc())
+    if q:
+        # simple search by code or tags (case-insensitive)
+        query = query.filter(
+            (Coupon.code.ilike(f"%{q}%")) | (Coupon.tags.ilike(f"%{q}%"))
+        )
+    rows = query.all()
+
+    # Format datetimes to readable strings for template
+    coupons = []
+    for c in rows:
+        coupons.append({
+            "id": c.id,
+            "code": c.code,
+            "description": c.description or "",
+            "issued_at": c.issued_at.isoformat(sep=" ", timespec="minutes") if c.issued_at else "",
+            "valid_to": c.valid_to.isoformat(sep=" ", timespec="minutes") if c.valid_to else "",
+            "redeemed_count": c.redeemed_count or 0,
+            "max_redemptions": c.max_redemptions or 1,
+            "tags": c.tags or ""
+        })
+    return render_template("admin.html", coupons=coupons)
+
+# --------------------
+# Admin: Reindex (no-op / safe)
+# --------------------
+@bp.route("/admin/reindex", methods=["POST"])
+def reindex():
+    """
+    Small admin endpoint to simulate rebuilding an index.
+    Currently a safe no-op that just logs the action and redirects back.
+    """
+    try:
+        # Optionally record an audit log that admin triggered reindex
+        log = AuditLog(user="admin", action="reindex", coupon_code=None, details="manual reindex triggered")
+        db.session.add(log)
+        db.session.commit()
+        flash("Rebuild index requested — completed (no-op).", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to request reindex: {e}", "error")
+
+    return redirect(url_for("main.admin"))
 
 
-@bp.route("/logs")
+@bp.route("/admin/delete", methods=["POST"])
+def admin_delete():
+    """
+    Delete coupon by ID (form POST). Expects coupon_id in form.
+    Redirects back to admin with flash message.
+    """
+    coupon_id = request.form.get("coupon_id")
+    if not coupon_id:
+        flash("Missing coupon identifier.", "error")
+        return redirect(url_for("main.admin"))
+    try:
+        cid = int(coupon_id)
+    except Exception:
+        flash("Invalid coupon id.", "error")
+        return redirect(url_for("main.admin"))
+
+    c = Coupon.query.get(cid)
+    if not c:
+        flash("Coupon not found.", "error")
+        return redirect(url_for("main.admin"))
+
+    try:
+        # log deletion
+        log = AuditLog(user="admin", action="delete", coupon_code=c.code, details=f"deleted id:{c.id}")
+        db.session.add(log)
+        db.session.delete(c)
+        db.session.commit()
+        flash(f"Coupon '{c.code}' (id {c.id}) deleted.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete coupon: {e}", "error")
+
+    return redirect(url_for("main.admin"))
+
+
+@bp.route("/admin/clear_expired", methods=["POST"])
+def clear_expired():
+    """
+    Remove expired coupons (valid_to < now). Dangerous; admin-only in future.
+    """
+    now = datetime.now()
+    try:
+        expired = Coupon.query.filter(Coupon.valid_to != None, Coupon.valid_to < now).all()
+        count = len(expired)
+        for c in expired:
+            log = AuditLog(user="admin", action="delete_expired", coupon_code=c.code, details=f"expired deleted id:{c.id}")
+            db.session.add(log)
+            db.session.delete(c)
+        db.session.commit()
+        flash(f"Cleared {count} expired coupons.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to clear expired coupons: {e}", "error")
+    return redirect(url_for("main.admin"))
+
+
+@bp.route("/admin/export", methods=["POST"])
+def export_all_coupons():
+    """
+    Export all coupons to xlsx and return as attachment.
+    Reuse existing export_xlsx logic but produce a file from current DB.
+    """
+    # build same data as export_xlsx
+    rows = Coupon.query.order_by(Coupon.id.asc()).all()
+    data = []
+    now = datetime.now()
+    for c in rows:
+        issued = getattr(c, "issued_at", None)
+        valid_to = getattr(c, "valid_to", None)
+        status = "Active"
+        if valid_to and now > valid_to:
+            status = "Expired"
+        elif getattr(c, "valid_from", None) and now < c.valid_from:
+            status = "Upcoming"
+        data.append({
+            "code": c.code,
+            "description": c.description or "",
+            "issued_at": issued,
+            "validity_value": c.validity_value,
+            "validity_unit": c.validity_unit,
+            "issued_to": c.issued_to or "",
+            "tags": c.tags or "",
+            "max_redemptions": c.max_redemptions or 1,
+            "redeemed_count": c.redeemed_count or 0,
+            "valid_to": valid_to,
+            "status": status,
+        })
+    df = pd.DataFrame(data, columns=[
+        "code","description","issued_at","validity_value","validity_unit",
+        "issued_to","tags","max_redemptions","redeemed_count","valid_to","status"
+    ])
+    # convert datetimes
+    for dt_col in ("issued_at","valid_to"):
+        if dt_col in df.columns:
+            df[dt_col] = df[dt_col].apply(lambda v: pd.NaT if v is None else pd.to_datetime(v))
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="coupons")
+    output.seek(0)
+    fn = f"coupons_export_{int(time.time())}.xlsx"
+    return send_file(output, as_attachment=True, download_name=fn,
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+
+@bp.route("/logs", methods=["GET"])
 def logs():
-    sample = [
-        {"ts": "2025-12-04 15:20", "user": "admin", "action": "redeem", "coupon": "LUNCH50", "details": "marked claimed"},
-    ]
-    return render_template("logs.html", logs=sample)
+    q = (request.args.get("q") or "").strip().lower()
+    query = AuditLog.query.order_by(AuditLog.timestamp.desc())
+    if q:
+        query = query.filter(
+            (AuditLog.user.ilike(f"%{q}%")) |
+            (AuditLog.action.ilike(f"%{q}%")) |
+            (AuditLog.coupon_code.ilike(f"%{q}%")) |
+            (AuditLog.details.ilike(f"%{q}%"))
+        )
+    rows = query.limit(200).all()  # cap for UI
+    logs_out = []
+    for r in rows:
+        logs_out.append({
+            "timestamp": r.timestamp.isoformat(sep=" ", timespec="minutes") if r.timestamp else "",
+            "user": r.user or "",
+            "action": r.action or "",
+            "coupon_code": r.coupon_code or "",
+            "details": r.details or ""
+        })
+    return render_template("logs.html", logs=logs_out)
+
+@bp.route("/logs/export", methods=["GET"])
+def export_logs_csv():
+    # stream audit logs as CSV
+    rows = AuditLog.query.order_by(AuditLog.timestamp.desc()).all()
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["timestamp","user","action","coupon_code","details"])
+    for r in rows:
+        writer.writerow([
+            r.timestamp.isoformat(sep=" ", timespec="minutes") if r.timestamp else "",
+            r.user or "",
+            r.action or "",
+            r.coupon_code or "",
+            r.details or ""
+        ])
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=audit_logs_{int(time.time())}.csv"
+    output.headers["Content-Type"] = "text/csv; charset=utf-8"
+    return output
+
 
 
 @bp.route("/api/validate_coupon", methods=["POST"])

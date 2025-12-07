@@ -1,11 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Import Coupons{% endblock %}
+{% block title %}Audit Logs — CouponApp{% endblock %}
+
 {% block content %}
 <div class="app-container">
-  {% include 'sidebar.html' ignore missing %}
+  <aside class="sidebar" aria-hidden="true">
+    <div class="sidebar-brand">CouponApp</div>
+    <nav class="side-nav">
+      <a class="nav-item" href="{{ url_for('main.index') }}">Dashboard</a>
+      <a class="nav-item" href="{{ url_for('main.register') }}">Register</a>
+      <a class="nav-item" href="{{ url_for('main.redeem') }}">Redeem</a>
+      <a class="nav-item" href="{{ url_for('main.import_excel') }}">Import</a>
+      <a class="nav-item" href="{{ url_for('main.export') }}">Export</a>
+      <a class="nav-item" href="{{ url_for('main.admin') }}">Admin</a>
+      <a class="nav-item active" href="{{ url_for('main.logs') }}">Logs</a>
+    </nav>
+  </aside>
+
   <main class="main">
-    <h1>Import Coupons (Excel)</h1>
-    <p>Upload UI & import logic will be implemented later.</p>
+    <header class="main-header">
+      <h1 class="title">Audit Logs</h1>
+      <div class="header-meta">All audit events (most recent first)</div>
+    </header>
+
+    <section class="table-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Audit Logs ({{ logs|length }})</h2>
+        <div style="display:flex; gap:8px;">
+          <a class="btn" href="{{ url_for('main.export_logs_csv') }}">Export Logs (CSV)</a>
+          <form method="get" action="{{ url_for('main.logs') }}">
+            <input name="q" value="{{ request.args.get('q','') }}" placeholder="Filter by user/action/coupon..." style="padding:8px 10px; border-radius:6px; border:1px solid #d7dae1;" />
+            <button class="btn small" type="submit">Filter</button>
+          </form>
+        </div>
+      </div>
+
+      <table class="coupons-table" style="margin-top:12px;">
+        <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Coupon</th><th>Details</th></tr></thead>
+        <tbody>
+          {% for l in logs %}
+          <tr>
+            <td>{{ l.timestamp }}</td>
+            <td>{{ l.user or '' }}</td>
+            <td>{{ l.action }}</td>
+            <td>{{ l.coupon_code or '' }}</td>
+            <td>{{ l.details or '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
   </main>
 </div>
 {% endblock %}

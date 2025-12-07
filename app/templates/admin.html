@@ -1,11 +1,159 @@
 {% extends "base.html" %}
-{% block title %}Import Coupons{% endblock %}
+{% block title %}Admin — CouponApp{% endblock %}
+
 {% block content %}
 <div class="app-container">
-  {% include 'sidebar.html' ignore missing %}
+  <aside class="sidebar" aria-hidden="true">
+    <div class="sidebar-brand">CouponApp</div>
+    <nav class="side-nav">
+      <a class="nav-item" href="{{ url_for('main.index') }}">Dashboard</a>
+      <a class="nav-item" href="{{ url_for('main.register') }}">Register</a>
+      <a class="nav-item" href="{{ url_for('main.redeem') }}">Redeem</a>
+      <a class="nav-item" href="{{ url_for('main.import_excel') }}">Import</a>
+      <a class="nav-item" href="{{ url_for('main.export') }}">Export</a>
+      <a class="nav-item active" href="{{ url_for('main.admin') }}">Admin</a>
+      <a class="nav-item" href="{{ url_for('main.logs') }}">Logs</a>
+    </nav>
+  </aside>
+
   <main class="main">
-    <h1>Import Coupons (Excel)</h1>
-    <p>Upload UI & import logic will be implemented later.</p>
+    <header class="main-header">
+      <h1 class="title">Admin</h1>
+      <div class="header-meta">Manage coupons and system actions</div>
+    </header>
+
+    <section class="table-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Coupons ({{ coupons|length }})</h2>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <form method="get" action="{{ url_for('main.admin') }}">
+            <input name="q" value="{{ request.args.get('q','') }}" placeholder="Search code or tags..." style="padding:8px 10px; border-radius:6px; border:1px solid #d7dae1;" />
+            <button class="btn small" type="submit">Search</button>
+          </form>
+
+          <form method="post" action="{{ url_for('main.clear_expired') }}" onsubmit="return confirm('Clear all expired coupons? This cannot be undone.');">
+            <button class="btn small ghost" type="submit">Clear expired</button>
+          </form>
+        </div>
+      </div>
+
+      <table class="coupons-table" style="margin-top:12px;">
+        <thead>
+          <tr>
+            <th>ID</th><th>Code</th><th>Description</th><th>Issued At</th><th>Valid To</th>
+            <th>Redeemed</th><th>Max</th><th>Tags</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in coupons %}
+          <tr>
+            <td>{{ c.id }}</td>
+            <td class="mono">{{ c.code }}</td>
+            <td>{{ c.description or '' }}</td>
+            <td>{{ c.issued_at or '' }}</td>
+            <td>{{ c.valid_to or '' }}</td>
+            <td>{{ c.redeemed_count or 0 }}</td>
+            <td>{{ c.max_redemptions or 1 }}</td>
+            <td>{{ c.tags or '' }}</td>
+            <td style="text-align:right;">
+              <form method="post" class="delete-form" action="{{ url_for('main.admin_delete') }}" style="display:inline;">
+                <input type="hidden" name="coupon_id" value="{{ c.id }}" />
+                <input type="hidden" name="coupon_code" value="{{ c.code }}" />
+                <button type="submit" class="btn ghost btn-delete" data-id="{{ c.id }}" data-code="{{ c.code }}">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="table-card" style="margin-top:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>System actions</h2>
+        <div>
+          <form method="post" action="{{ url_for('main.export_all_coupons') }}" style="display:inline;">
+            <button class="btn" type="submit">Export Coupons (xlsx)</button>
+          </form>
+          <form method="post" action="{{ url_for('main.reindex') }}" style="display:inline;">
+            <button class="btn ghost" type="submit">Rebuild Index (no-op)</button>
+          </form>
+        </div>
+      </div>
+
+      <p style="margin-top:10px; color:#6b6f74; font-size:13px;">
+        Actions here are potentially destructive. Use with care.
+      </p>
+    </section>
+
   </main>
 </div>
+
+{# Confirmation modal (moved to body by script for robustness) #}
+<div id="admin-confirm-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-card">
+    <h3 style="margin-top:0;">Confirm deletion</h3>
+    <p id="admin-confirm-text">Are you sure?</p>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+      <button id="admin-confirm-cancel" class="btn ghost">Cancel</button>
+      <button id="admin-confirm-yes" class="btn">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Minimal client-side wiring: keep modal DOM at body and prevent scroll while open -->
+<script>
+/* This script wires the delete forms to open the modal and then submit */
+(function(){
+  // move modal to body root
+  const modal = document.getElementById('admin-confirm-modal');
+  if (modal && modal.parentNode !== document.body) document.body.appendChild(modal);
+
+  // helpers
+  function openModal(text) {
+    modal.querySelector('#admin-confirm-text').innerText = text;
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('_modal_open');
+  }
+  function closeModal() {
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('_modal_open');
+  }
+
+  let pendingForm = null;
+  document.querySelectorAll('form.delete-form').forEach(function(form){
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      pendingForm = form;
+      const code = form.querySelector('input[name="coupon_code"]').value || '—';
+      const id = form.querySelector('input[name="coupon_id"]').value || '';
+      openModal(`Are you sure you want to permanently delete coupon '${code}' (id ${id})? This action cannot be undone.`);
+    });
+  });
+
+  document.getElementById('admin-confirm-cancel').addEventListener('click', function(e){
+    e.preventDefault(); closeModal(); pendingForm = null;
+  });
+  document.getElementById('admin-confirm-yes').addEventListener('click', function(e){
+    e.preventDefault();
+    if (!pendingForm) { closeModal(); return; }
+    pendingForm.submit();
+  });
+
+  // clicking outside closes
+  modal.addEventListener('click', function(ev){
+    if (ev.target === modal) { closeModal(); pendingForm = null; }
+  });
+
+  // esc to close
+  document.addEventListener('keydown', function(ev){
+    if (ev.key === 'Escape' && modal.style.display === 'flex') { closeModal(); pendingForm = null; }
+  });
+
+})();
+</script>
+
 {% endblock %}
